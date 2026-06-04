@@ -1,0 +1,26 @@
+CREATE TABLE chart_history (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    coin_id TEXT NOT NULL,
+    range TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    price REAL NOT NULL
+);
+
+insert:
+INSERT INTO chart_history(
+    coin_id,
+    range,
+    timestamp,
+    price
+) VALUES (?, ?, ?, ?);
+
+getChartHistory:
+SELECT * FROM chart_history
+WHERE coin_id = :coinId AND range = :range
+ORDER BY timestamp ASC;
+
+clearForCoin:
+DELETE FROM chart_history WHERE coin_id = ? AND range = ?;
+
+clearAll:
+DELETE FROM chart_history;

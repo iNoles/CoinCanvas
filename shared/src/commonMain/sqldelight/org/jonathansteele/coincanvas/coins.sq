@@ -1,0 +1,35 @@
+CREATE TABLE coins (
+    id TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    symbol TEXT NOT NULL,
+    image TEXT NOT NULL,
+    current_price REAL NOT NULL,
+    market_cap REAL,
+    total_volume REAL,
+    price_change_24h REAL,
+    circulating_supply REAL,
+    total_supply REAL
+);
+
+selectAll:
+SELECT * FROM coins;
+
+selectById:
+SELECT * FROM coins WHERE id = ?;
+
+insert:
+INSERT OR REPLACE INTO coins(
+    id,
+    name,
+    symbol,
+    image,
+    current_price,
+    market_cap,
+    total_volume,
+    price_change_24h,
+    circulating_supply,
+    total_supply
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+clear:
+DELETE FROM coins;

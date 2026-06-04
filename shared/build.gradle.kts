@@ -7,11 +7,21 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.sqldelight)
 }
 composeCompiler {
     stabilityConfigurationFiles.add(
         rootProject.layout.projectDirectory.file("stability_config.conf")
     )
+}
+
+sqldelight {
+    databases {
+        register("Database") { // This will be the name of the generated database class.
+            packageName.set("org.jonathansteele.coincanvas")
+            generateAsync.set(false)
+        }
+    }
 }
 
 kotlin {
@@ -26,10 +36,6 @@ kotlin {
     }
     
     jvm()
-    
-    js {
-        browser()
-    }
     
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
@@ -56,10 +62,12 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.sqldelight.driver)
         }
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.sqldelight.android)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
@@ -85,11 +93,12 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
-        jsMain.dependencies {
-            implementation(libs.wrappers.browser)
-        }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+            implementation(libs.sqldelight.native)
+        }
+        wasmJsMain.dependencies {
+            implementation(libs.sqldelight.async)
         }
     }
 }
