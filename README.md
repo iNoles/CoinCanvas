@@ -96,7 +96,7 @@ Subfolders:
 - **`androidMain`** — Android‑specific implementations  
 - **`iosMain`** — iOS‑specific implementations (e.g., CoreCrypto, platform APIs)  
 - **`jvmMain`** — Desktop‑specific code  
-- **`jsMain` / `wasmJsMain`** — Web‑specific code  
+- **`wasmJsMain`** — Web‑specific code  
 
 This structure allows platform‑specific optimizations while keeping most logic shared.
 
