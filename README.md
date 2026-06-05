@@ -52,6 +52,24 @@ One UI. One design system. One codebase.
 - Expressive cards, list items, and top bars  
 - Consistent spacing + motion patterns
 
+## Tech Stack
+
+### Core
+- **Kotlin Multiplatform (KMP)** — shared logic for Android, iOS, Desktop, Web
+- **Compose Multiplatform** — shared UI across all platforms
+- **Material 3** — modern UI components and theming
+- **Compose Canvas** — custom gradient charts and drawing primitives
+
+### Networking
+- **Ktor Client** — multiplatform HTTP client
+- **Kotlinx Serialization** — JSON parsing with @Serializable models
+
+### Data & Persistence
+- **SQLDelight** — type‑safe database with shared schema
+- **expect/actual SQLDelight drivers** — platform‑specific driver implementations
+- **Repository pattern** — clean data access layer
+- **Koin** — dependency injection for repositories, services, and ViewModels
+
 ## Project Structure
 
 This is a **Kotlin Multiplatform project** targeting **Android, iOS, Web, and Desktop (JVM)**.
@@ -86,7 +104,7 @@ This structure allows platform‑specific optimizations while keeping most logic
 
 ## Screenshots
 
-> Add Android, Desktop, Web, and iOS screenshots here.
+![Desktop](images/desktop.png)
 
 ---
 

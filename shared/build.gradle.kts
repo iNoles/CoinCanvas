@@ -9,11 +9,6 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.sqldelight)
 }
-composeCompiler {
-    stabilityConfigurationFiles.add(
-        rootProject.layout.projectDirectory.file("stability_config.conf")
-    )
-}
 
 sqldelight {
     databases {
@@ -42,7 +37,7 @@ kotlin {
         browser()
     }
     
-    androidLibrary {
+    android {
        namespace = "org.jonathansteele.coincanvas.shared"
        compileSdk = libs.versions.android.compileSdk.get().toInt()
        minSdk = libs.versions.android.minSdk.get().toInt()
@@ -98,12 +93,12 @@ kotlin {
             implementation(libs.sqldelight.native)
         }
         wasmJsMain.dependencies {
-            implementation(libs.sqldelight.async)
+            implementation(libs.sqldelight.web)
+            implementation(npm("@cashapp/sqldelight-sqljs-worker", "2.3.2"))
+            implementation(npm("sql.js", "1.8.0"))
         }
     }
 }
-
-
 
 dependencies {
     androidRuntimeClasspath(libs.compose.uiTooling)

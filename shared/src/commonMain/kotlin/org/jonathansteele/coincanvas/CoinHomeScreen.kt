@@ -1,29 +1,17 @@
 package org.jonathansteele.coincanvas
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import org.jonathansteele.coincanvas.components.CoinCanvasTopBarExpressive
 import org.jonathansteele.coincanvas.components.CoinCardExpressive
 import org.jonathansteele.coincanvas.data.model.Coin
+import org.jonathansteele.coincanvas.data.model.FavoritesSet
 import org.jonathansteele.coincanvas.viewmodel.CryptoViewModel
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -32,8 +20,11 @@ fun CoinHomeScreen(
     onCoinClick: (Coin) -> Unit
 ) {
     val viewModel: CryptoViewModel = koinViewModel()
+
     val coins by viewModel.coins.collectAsState()
+    val favorites by viewModel.favorites.collectAsState()
     val sortType by viewModel.sortType.collectAsState()
+    var selectedTab by remember { mutableStateOf(HomeTab.COINS) }
 
     Scaffold(
         topBar = {
@@ -48,44 +39,91 @@ fun CoinHomeScreen(
             modifier = Modifier
                 .padding(padding)
                 .padding(horizontal = 20.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .fillMaxSize()
         ) {
-            Spacer(Modifier.height(8.dp))
+            PrimaryTabRow(selectedTab.ordinal) {
+                Tab(
+                    selected = selectedTab == HomeTab.COINS,
+                    onClick = { selectedTab = HomeTab.COINS },
+                    text = { Text("Coins") }
+                )
+                Tab(
+                    selected = selectedTab == HomeTab.FAVORITES,
+                    onClick = { selectedTab = HomeTab.FAVORITES },
+                    text = { Text("Favorites") }
+                )
+            }
 
-            SectionHeader(
-                title = "Top Cryptocurrencies",
-                color = MaterialTheme.colorScheme.primary
-            )
+            Spacer(Modifier.height(16.dp))
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(coins) { coin ->
-                    ExpressiveListCard {
-                        CoinCardExpressive(
-                            coin = coin,
-                            onClick = { onCoinClick(coin) }
-                        )
-                    }
-                }
+            when (selectedTab) {
+                HomeTab.COINS -> CoinList(
+                    coins = coins,
+                    favorites = favorites,
+                    onCoinClick = onCoinClick,
+                    onFavoriteClick = { viewModel.toggleFavorite(it) }
+                )
+
+                HomeTab.FAVORITES -> FavoriteList(
+                    coins = coins.filter { favorites.contains(it.id) },
+                    favorites = favorites,
+                    onCoinClick = onCoinClick,
+                    onFavoriteClick = { viewModel.toggleFavorite(it) }
+                )
             }
         }
     }
 }
 
 @Composable
-fun SectionHeader(
-    title: String,
-    color: Color = MaterialTheme.colorScheme.onBackground
+fun CoinList(
+    coins: List<Coin>,
+    favorites: FavoritesSet,
+    onCoinClick: (Coin) -> Unit,
+    onFavoriteClick: (String) -> Unit
 ) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.headlineMedium,
-        fontWeight = FontWeight.Bold,
-        color = color
-    )
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        items(coins, { it.id }) { coin ->
+            ExpressiveListCard {
+                CoinCardExpressive(
+                    coin = coin,
+                    isFavorite = favorites.contains(coin.id),
+                    onFavoriteClick = { onFavoriteClick(coin.id) },
+                    onClick = { onCoinClick(coin) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun FavoriteList(
+    coins: List<Coin>,
+    favorites: FavoritesSet,
+    onCoinClick: (Coin) -> Unit,
+    onFavoriteClick: (String) -> Unit
+) {
+    if (coins.isEmpty()) {
+        Text(
+            "No favorites yet",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(20.dp)
+        )
+        return
+    }
+
+    LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        items(coins, { it.id }) { coin ->
+            ExpressiveListCard {
+                CoinCardExpressive(
+                    coin = coin,
+                    isFavorite = favorites.contains(coin.id),
+                    onFavoriteClick = { onFavoriteClick(coin.id) },
+                    onClick = { onCoinClick(coin) }
+                )
+            }
+        }
+    }
 }
 
 @Composable

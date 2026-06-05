@@ -11,5 +11,5 @@ val databaseModule = module {
         Database(get())
     }
     single { get<Database>().coinsQueries }
-    single { get<Database>().favoriteQueries }
+    single { get<Database>().favoritesQueries }
 }

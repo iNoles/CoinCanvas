@@ -2,12 +2,14 @@ package org.jonathansteele.coincanvas.data.repository
 
 import kotlin.time.Clock
 import org.jonathansteele.coincanvas.CoinsQueries
+import org.jonathansteele.coincanvas.FavoritesQueries
 import org.jonathansteele.coincanvas.data.api.CryptoApi
 import org.jonathansteele.coincanvas.data.model.Coin
 
 class CryptoRepository(
     private val api: CryptoApi,
-    private val coinsQueries: CoinsQueries
+    private val coinsQueries: CoinsQueries,
+    private val favoritesQueries: FavoritesQueries
 ) {
     private var cachedCoins: List<Coin> = emptyList()
     private var lastCoinsFetchTime: Long = 0
@@ -89,6 +91,21 @@ class CryptoRepository(
             circulatingSupply = row.circulating_supply,
             totalSupply = row.total_supply
         )
+    }
+
+    fun getFavorites(): List<String> =
+        favoritesQueries.selectAll().executeAsList().map { it }
+    fun isFavorite(id: String): Boolean =
+        favoritesQueries.isFavorite(id).executeAsOne()
+    fun addFavorite(id: String) {
+        favoritesQueries.insert(id)
+    }
+    fun removeFavorite(id: String) {
+        favoritesQueries.delete(id)
+    }
+    fun toggleFavorite(id: String) {
+        if (isFavorite(id)) removeFavorite(id)
+        else addFavorite(id)
     }
 
     // History stays in memory for now

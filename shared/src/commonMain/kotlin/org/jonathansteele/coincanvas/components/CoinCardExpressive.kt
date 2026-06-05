@@ -7,6 +7,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,17 +27,20 @@ import org.jonathansteele.coincanvas.toFixed
 @Composable
 fun CoinCardExpressive(
     coin: Coin,
+    isFavorite: Boolean,
+    onFavoriteClick: () -> Unit,
     onClick: (Coin) -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick(coin) }
-            .padding(vertical = 4.dp), // breathing room inside ExpressiveListCard
+            .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
 
+        // LEFT: Logo + Name + Symbol
         Row(verticalAlignment = Alignment.CenterVertically) {
 
             AsyncImage(
@@ -58,23 +66,44 @@ fun CoinCardExpressive(
             }
         }
 
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                text = "$${coin.currentPrice.toFixed(2)}",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
+        // RIGHT: Price + Change + Favorite
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
 
-            val change = coin.priceChangeWith24h ?: 0.0
-            val changeColor =
-                if (change >= 0.0) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.error
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "$${coin.currentPrice.toFixed(2)}",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
 
-            Text(
-                text = "${change.toFixed(2)}%",
-                style = MaterialTheme.typography.bodyMedium,
-                color = changeColor
-            )
+                val change = coin.priceChangeWith24h ?: 0.0
+                val changeColor =
+                    if (change >= 0.0) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.error
+
+                Text(
+                    text = "${change.toFixed(2)}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = changeColor
+                )
+            }
+
+            IconButton(onClick = onFavoriteClick) {
+                Icon(
+                    imageVector = if (isFavorite)
+                        Icons.Filled.Favorite
+                    else
+                        Icons.Outlined.FavoriteBorder,
+                    contentDescription = null,
+                    tint = if (isFavorite)
+                        MaterialTheme.colorScheme.primary
+                    else
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

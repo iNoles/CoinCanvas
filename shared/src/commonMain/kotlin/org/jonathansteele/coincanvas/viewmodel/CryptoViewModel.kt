@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import org.jonathansteele.coincanvas.SortType
 import org.jonathansteele.coincanvas.data.model.Coin
+import org.jonathansteele.coincanvas.data.model.FavoritesSet
 import org.jonathansteele.coincanvas.data.repository.CryptoRepository
 
 class CryptoViewModel(
@@ -22,6 +23,9 @@ class CryptoViewModel(
     private val _sortType = MutableStateFlow(SortType.MARKET_CAP)
     val sortType = _sortType.asStateFlow()
 
+    private val _favorites = MutableStateFlow(FavoritesSet(emptySet()))
+    val favorites = _favorites.asStateFlow()
+
     private var originalCoins: List<Coin> = emptyList()
 
     // Debounce trigger
@@ -30,6 +34,7 @@ class CryptoViewModel(
     init {
         observeLoadTrigger()
         loadCoins() // initial load
+        loadFavorites()
     }
 
     @OptIn(FlowPreview::class)
@@ -48,6 +53,20 @@ class CryptoViewModel(
     fun loadCoins() {
         loadTrigger.value++ // triggers debounce
     }
+
+    // Load favorites from SQLDelight
+    fun loadFavorites() {
+        _favorites.value = FavoritesSet(repository.getFavorites().toSet())
+    }
+
+    // Toggle favorite and refresh state
+    fun toggleFavorite(id: String) {
+        repository.toggleFavorite(id)
+        loadFavorites()
+    }
+
+    fun isFavorite(id: String): Boolean =
+        _favorites.value.contains(id)
 
     fun sort(sortType: SortType) {
         _sortType.value = sortType
