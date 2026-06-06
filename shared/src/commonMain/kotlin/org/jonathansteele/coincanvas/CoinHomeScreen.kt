@@ -1,11 +1,30 @@
 package org.jonathansteele.coincanvas
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import org.jonathansteele.coincanvas.components.CoinCanvasTopBarExpressive
@@ -23,57 +42,79 @@ fun CoinHomeScreen(
 
     val coins by viewModel.coins.collectAsState()
     val favorites by viewModel.favorites.collectAsState()
+
+    // Local UI state
     var selectedTab by remember { mutableStateOf(HomeTab.COINS) }
     var sortType by remember { mutableStateOf(SortType.MARKET_CAP) }
 
+    // Sorting applied in UI
     val sortedCoins = remember(coins, sortType) {
         sortCoins(coins, sortType)
     }
 
-    Scaffold(
-        topBar = {
-            CoinCanvasTopBarExpressive(
-                currentSort = sortType,
-                onSortSelected = { sortType = it }
-            )
-        }
-    ) { padding ->
+    // Pull-to-refresh state
+    var refreshing by remember { mutableStateOf(false) }
+    val pullState = rememberPullToRefreshState()
 
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .padding(horizontal = 20.dp)
-                .fillMaxSize()
-        ) {
-            PrimaryTabRow(selectedTab.ordinal) {
-                Tab(
-                    selected = selectedTab == HomeTab.COINS,
-                    onClick = { selectedTab = HomeTab.COINS },
-                    text = { Text("Coins") }
-                )
-                Tab(
-                    selected = selectedTab == HomeTab.FAVORITES,
-                    onClick = { selectedTab = HomeTab.FAVORITES },
-                    text = { Text("Favorites") }
+    // End refresh when new coins arrive
+    LaunchedEffect(coins) {
+        if (refreshing) refreshing = false
+    }
+
+    PullToRefreshBox(
+        isRefreshing = refreshing,
+        onRefresh = {
+            refreshing = true
+            viewModel.loadCoins()
+        },
+        state = pullState
+    ) {
+
+        Scaffold(
+            topBar = {
+                CoinCanvasTopBarExpressive(
+                    currentSort = sortType,
+                    onSortSelected = { sortType = it }
                 )
             }
+        ) { padding ->
 
-            Spacer(Modifier.height(16.dp))
+            Column(
+                modifier = Modifier
+                    .padding(padding)
+                    .padding(horizontal = 20.dp)
+                    .fillMaxSize()
+            ) {
+                PrimaryTabRow(selectedTab.ordinal) {
+                    Tab(
+                        selected = selectedTab == HomeTab.COINS,
+                        onClick = { selectedTab = HomeTab.COINS },
+                        text = { Text("Coins") }
+                    )
+                    Tab(
+                        selected = selectedTab == HomeTab.FAVORITES,
+                        onClick = { selectedTab = HomeTab.FAVORITES },
+                        text = { Text("Favorites") }
+                    )
+                }
 
-            when (selectedTab) {
-                HomeTab.COINS -> CoinList(
-                    coins = sortedCoins,
-                    favorites = favorites,
-                    onCoinClick = onCoinClick,
-                    onFavoriteClick = { viewModel.toggleFavorite(it) }
-                )
+                Spacer(Modifier.height(16.dp))
 
-                HomeTab.FAVORITES -> FavoriteList(
-                    coins = coins.filter { favorites.contains(it.id) },
-                    favorites = favorites,
-                    onCoinClick = onCoinClick,
-                    onFavoriteClick = { viewModel.toggleFavorite(it) }
-                )
+                when (selectedTab) {
+                    HomeTab.COINS -> CoinList(
+                        coins = sortedCoins,
+                        favorites = favorites,
+                        onCoinClick = onCoinClick,
+                        onFavoriteClick = { viewModel.toggleFavorite(it) }
+                    )
+
+                    HomeTab.FAVORITES -> FavoriteList(
+                        coins = sortedCoins.filter { favorites.contains(it.id) },
+                        favorites = favorites,
+                        onCoinClick = onCoinClick,
+                        onFavoriteClick = { viewModel.toggleFavorite(it) }
+                    )
+                }
             }
         }
     }
