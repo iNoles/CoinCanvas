@@ -23,14 +23,18 @@ fun CoinHomeScreen(
 
     val coins by viewModel.coins.collectAsState()
     val favorites by viewModel.favorites.collectAsState()
-    val sortType by viewModel.sortType.collectAsState()
     var selectedTab by remember { mutableStateOf(HomeTab.COINS) }
+    var sortType by remember { mutableStateOf(SortType.MARKET_CAP) }
+
+    val sortedCoins = remember(coins, sortType) {
+        sortCoins(coins, sortType)
+    }
 
     Scaffold(
         topBar = {
             CoinCanvasTopBarExpressive(
                 currentSort = sortType,
-                onSortSelected = { viewModel.sort(it) }
+                onSortSelected = { sortType = it }
             )
         }
     ) { padding ->
@@ -58,7 +62,7 @@ fun CoinHomeScreen(
 
             when (selectedTab) {
                 HomeTab.COINS -> CoinList(
-                    coins = coins,
+                    coins = sortedCoins,
                     favorites = favorites,
                     onCoinClick = onCoinClick,
                     onFavoriteClick = { viewModel.toggleFavorite(it) }
@@ -144,3 +148,11 @@ fun ExpressiveListCard(
         }
     }
 }
+
+fun sortCoins(list: List<Coin>, sortType: SortType): List<Coin> =
+    when (sortType) {
+        SortType.PRICE -> list.sortedByDescending { it.currentPrice }
+        SortType.CHANGE -> list.sortedByDescending { it.priceChangeWith24h ?: 0.0 }
+        SortType.VOLUME -> list.sortedByDescending { it.totalVolume ?: 0.0 }
+        SortType.MARKET_CAP -> list.sortedByDescending { it.marketCap ?: 0.0 }
+    }

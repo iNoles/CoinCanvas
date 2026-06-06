@@ -23,30 +23,10 @@ class CryptoRepository(
             return cachedCoins
         }
 
-        // 2. SQLDelight cache
-        val local = coinsQueries.selectAll().executeAsList()
-        if (local.isNotEmpty()) {
-            cachedCoins = local.map { row ->
-                Coin(
-                    id = row.id,
-                    name = row.name,
-                    symbol = row.symbol,
-                    image = row.image,
-                    currentPrice = row.current_price,
-                    marketCap = row.market_cap,
-                    totalVolume = row.total_volume,
-                    priceChangeWith24h = row.price_change_24h,
-                    circulatingSupply = row.circulating_supply,
-                    totalSupply = row.total_supply
-                )
-            }
-            return cachedCoins
-        }
-
-        // 3. API fetch
+        // 2. API fetch
         val remote = api.fetchCoins()
 
-        // 4. Save to SQLDelight
+        // 3. Save to SQLDelight
         coinsQueries.transaction {
             coinsQueries.clear()
             remote.forEach { coin ->
@@ -65,12 +45,30 @@ class CryptoRepository(
             }
         }
 
-        // 5. Save to memory
+        // 4. Save to memory
         cachedCoins = remote
         lastCoinsFetchTime = now
 
         return remote
     }
+
+    fun getCachedCoins(): List<Coin> {
+        return coinsQueries.selectAll().executeAsList().map { row ->
+            Coin(
+                id = row.id,
+                name = row.name,
+                symbol = row.symbol,
+                image = row.image,
+                currentPrice = row.current_price,
+                marketCap = row.market_cap,
+                totalVolume = row.total_volume,
+                priceChangeWith24h = row.price_change_24h,
+                circulatingSupply = row.circulating_supply,
+                totalSupply = row.total_supply
+            )
+        }
+    }
+
 
     fun getCoinById(id: String): Coin? {
         // Memory first
